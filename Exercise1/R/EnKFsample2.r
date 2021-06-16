@@ -1,10 +1,10 @@
 #
 # EnKFadvection.R
 #
-# Data Assimilation on an advection equation using EnKF
+# Data Assimilation on an advection equation using EnKF
 #
-#             ???C       ???C
-#             -- + u * -- = 0
+#             ∂C       ∂C
+#             -- + u * -- = 0
 #             ∂t       ∂x
 #
 #
@@ -13,34 +13,34 @@
 library(MASS)
 
 # parameters
-u0      <- -4.0     # 真???移???速度 (true/unknown)
-sigma2  <-  0.1     # 真???観測ノイズの???散 (true/known)
-um      <-  0.0     # 移???速度の事前??????の平???
-usd     <-  2.0     # 移???速度の事前??????の標準偏差
+u0      <- -4.0     # 真の移流速度 (true/unknown)
+sigma2  <-  0.1     # 真の観測ノイズの分散 (true/known)
+um      <-  0.0     # 移流速度の事前分布の平均
+usd     <-  2.0     # 移流速度の事前分布の標準偏差
 
 
 # grid spacing
-dt <- 0.5            # シミュレーションの時間ス??????プ間???
-Nt <- 500            # シミュレーションの全時間ス??????プ数
-t  <- 0:(Nt-1) * dt  # 実時間???座???
-dx <- 10.0           # 空間差???の間隔
-Nx <- 400            # 空間???全???割数
-x  <- 0:(Nx-1) * dx  # 実空間???座???
+dt <- 0.5            # シミュレーションの時間ステップ間隔
+Nt <- 500            # シミュレーションの全時間ステップ数
+t  <- 0:(Nt-1) * dt  # 実時間の座標
+dx <- 10.0           # 空間差分の間隔
+Nx <- 400            # 空間の全分割数
+x  <- 0:(Nx-1) * dx  # 実空間の座標
 
-x1  <- 1:Nx           # 空間??????割要???の??????
-xl1 <- c(2:Nx,1)      # 空間??????割要???の???合を左へシフトした?????? 周期???界条件を適用
-xr1 <- c(Nx,1:(Nx-1)) # 空間??????割要???の???合を右へシフトした?????? 周期???界条件を適用
+x1  <- 1:Nx           # 空間の分割要素の集合
+xl1 <- c(2:Nx,1)      # 空間の分割要素の集合を左へシフトした集合 周期境界条件を適用
+xr1 <- c(Nx,1:(Nx-1)) # 空間の分割要素の集合を右へシフトした集合 周期境界条件を適用
 
-Np   <- 500          # EnKFのアンサンブルメンバ???の数
+Np   <- 2000          # EnKFのアンサンブルメンバーの数
 
-xini <- 50:150 # 初期条件の要?????????
+xini <- 50:150 # 初期条件の要素集合
 
 umax <-  0.8*dx/dt # CFL条件から決まるuの上限
 umin <- -0.8*dx/dt # CFL条件から決まるuの下限
 
 
 
-exact <- function( u ) { # 厳???解
+exact <- function( u ) { # 厳密解
     C <- matrix( 0, nrow=Nx, ncol=Nt )
     C[xini,1] <- 1
     tmp <- c( C[ ,1],C[ ,1] )
@@ -55,7 +55,7 @@ exact <- function( u ) { # 厳???解
 
 
 
-simulation <- function( u ) { # 風上差???を使ったシミュレーションの解
+simulation <- function( u ) { # 風上差分を使ったシミュレーションの解
   C <- matrix( 0, nrow=Nx, ncol=Nt )
   C[xini,1] <- 1
   for ( k in 2:Nt ) {
@@ -150,7 +150,7 @@ for ( k in 2:Nt ) {
   S <- ( xtf[xl1, ] + xtf[xr1, ] - 2 * xtf[x1, ] ) %*% diag( abs( xtf[Nx+1, ] ) ) / ( 2 * dx )
   v <-  matrix( rnorm(length(x1)*Np,mean=0, sd=0.01 ),ncol=Np)
   xtp[x1, ] <- xtf[x1, ] + ( A + S ) * dt + v[x1,]
-  xtp[Nx+1, ] <- xtf[Nx+1, ] # + rnorm( Np, mean=0, sd=0.1 ) #シス??????ノイズな???
+  xtp[Nx+1, ] <- xtf[Nx+1, ] # + rnorm( Np, mean=0, sd=0.1 ) #システムノイズなし
   xtpm[ ,k] <- apply( xtp, 1, mean )
 
 # skip filtering step if no observation
