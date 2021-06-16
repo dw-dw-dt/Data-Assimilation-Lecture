@@ -1,10 +1,10 @@
 #
 # EnKFadvection.R
 #
-# Data Assimilation on an advection equation using EnKF
+# Data Assimilation on an advection equation using EnKF
 #
 #             ∂C       ∂C
-#             -- + u * -- = 0
+#             -- + u * -- = 0
 #             ∂t       ∂x
 #
 #
